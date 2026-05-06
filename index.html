@@ -262,22 +262,7 @@
       align-items: center;
       border-bottom: 1px solid var(--border);
     }
-    .cart-header-actions {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
     
-     .continue-btn {
-      display: none;
-      border: 0;
-      background: rgba(53, 133, 142, 0.1);
-      color: var(--primary);
-      font-weight: 900;
-      cursor: pointer;
-      padding: 8px 10px;
-      border-radius: 999px;
-    }
     .cart-title {
       font-size: 20px;
       font-weight: 900;
@@ -289,6 +274,43 @@
       color: var(--primary);
       font-weight: 800;
       cursor: pointer;
+    }
+    .cart-action-row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-top: 16px;
+    }
+    
+    .continue-shopping-btn {
+      display: none;
+      width: 100%;
+      border: 1px solid var(--border);
+      padding: 15px 16px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.82);
+      color: var(--text);
+      font-size: 17px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+    
+    .checkout-btn {
+      width: 100%;
+      border: 0;
+      margin-top: 0;
+      padding: 15px 16px;
+      border-radius: 16px;
+      background: var(--primary);
+      color: white;
+      font-size: 17px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+    
+    .checkout-btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
     }
 
     .cart-items {
@@ -401,24 +423,6 @@
       color: var(--primary);
       font-size: 26px;
       font-weight: 900;
-    }
-
-    .checkout-btn {
-      width: 100%;
-      border: 0;
-      margin-top: 16px;
-      padding: 15px 16px;
-      border-radius: 16px;
-      background: var(--primary);
-      color: white;
-      font-size: 17px;
-      font-weight: 900;
-      cursor: pointer;
-    }
-
-    .checkout-btn:disabled {
-      opacity: 0.55;
-      cursor: not-allowed;
     }
 
     .mobile-cart-btn {
@@ -577,6 +581,24 @@
     }
 
     @media (max-width: 980px) {
+      .cart-action-row {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      
+      .continue-shopping-btn {
+        display: block;
+      }
+      
+      .checkout-btn {
+        font-size: 16px;
+        padding: 14px 10px;
+      }
+      
+      .continue-shopping-btn {
+        font-size: 16px;
+        padding: 14px 10px;
+      }
       header {
         padding: 14px 16px;
       }
@@ -715,17 +737,6 @@
       .payment-grid {
         grid-template-columns: 1fr;
       }
-      .cart-header-actions {
-        gap: 8px;
-      }
-      
-      .continue-btn,
-      .clear-btn {
-        font-size: 14px;
-      }
-      .continue-btn {
-        display: inline-flex;
-      }
     }
     @media (max-width: 430px) {
       .product-grid {
@@ -802,29 +813,31 @@
     <aside id="cartPanel" class="panel cart-panel">
       <div class="cart-header">
         <div class="cart-title">購物車</div>
-      
-        <div class="cart-header-actions">
-          <button class="continue-btn" onclick="closeMobileCart()">繼續選購</button>
-          <button class="clear-btn" onclick="clearCart()">清空</button>
-        </div>
+        <button class="clear-btn" onclick="clearCart()">清空</button>
       </div>
-
+    
       <div id="cartItems" class="cart-items"></div>
-
+    
       <div class="checkout-box">
         <div class="amount-row">
           <span>小計</span>
           <span>NT$<span id="subtotal">0</span></span>
         </div>
-
+    
         <div class="total-row">
           <span>總金額</span>
           <span class="total-price">NT$<span id="total">0</span></span>
         </div>
-
-        <button id="checkoutBtn" class="checkout-btn" onclick="openCheckout()" disabled>
-          前往結帳
-        </button>
+    
+        <div class="cart-action-row">
+          <button class="continue-shopping-btn" onclick="closeMobileCart()">
+            繼續選購
+          </button>
+    
+          <button id="checkoutBtn" class="checkout-btn" onclick="openCheckout()" disabled>
+            前往結帳
+          </button>
+        </div>
       </div>
     </aside>
   </main>
