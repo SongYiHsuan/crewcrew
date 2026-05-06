@@ -262,7 +262,22 @@
       align-items: center;
       border-bottom: 1px solid var(--border);
     }
-
+    .cart-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+     .continue-btn {
+      display: none;
+      border: 0;
+      background: rgba(53, 133, 142, 0.1);
+      color: var(--primary);
+      font-weight: 900;
+      cursor: pointer;
+      padding: 8px 10px;
+      border-radius: 999px;
+    }
     .cart-title {
       font-size: 20px;
       font-weight: 900;
@@ -700,6 +715,17 @@
       .payment-grid {
         grid-template-columns: 1fr;
       }
+      .cart-header-actions {
+        gap: 8px;
+      }
+      
+      .continue-btn,
+      .clear-btn {
+        font-size: 14px;
+      }
+      .continue-btn {
+        display: inline-flex;
+      }
     }
     @media (max-width: 430px) {
       .product-grid {
@@ -776,7 +802,11 @@
     <aside id="cartPanel" class="panel cart-panel">
       <div class="cart-header">
         <div class="cart-title">購物車</div>
-        <button class="clear-btn" onclick="clearCart()">清空</button>
+      
+        <div class="cart-header-actions">
+          <button class="continue-btn" onclick="closeMobileCart()">繼續選購</button>
+          <button class="clear-btn" onclick="clearCart()">清空</button>
+        </div>
       </div>
 
       <div id="cartItems" class="cart-items"></div>
@@ -1157,6 +1187,9 @@
 
     function toggleMobileCart() {
       document.getElementById('cartPanel').classList.toggle('mobile-open');
+    }
+    function closeMobileCart() {
+      document.getElementById('cartPanel').classList.remove('mobile-open');
     }
 
     function showToast(message) {
