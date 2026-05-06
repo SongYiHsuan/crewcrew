@@ -1,0 +1,222 @@
+const SHEET_MENU = '菜單';
+const SHEET_ORDERS = '訂單紀錄';
+
+const ORDER_FIXED_HEADERS = [
+  '訂單日期',
+  '建立時間',
+  '店別',
+  '付款方式',
+  '總金額'
+];
+
+function doGet(e) {
+  const mode = String(e.parameter.mode || '').trim();
+
+  if (mode === 'webMenu') {
+    return jsonOrJsonpOutput_(getWebMenu_(), e);
+  }
+
+  if (mode === 'webCheckout') {
+    const payloadText = String(e.parameter.payload || '{}');
+    const payload = JSON.parse(payloadText);
+    return jsonOrJsonpOutput_(saveWebCheckout_(payload), e);
+  }
+
+  if (mode === 'posMenu') {
+    return jsonOrJsonpOutput_(getWebMenu_(), e);
+  }
+
+  return jsonOrJsonpOutput_({
+    status: 'error',
+    message: 'Unknown mode: ' + mode
+  }, e);
+}
+
+function getWebMenu_() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(SHEET_MENU);
+
+  if (!sheet) {
+    return {
+      status: 'error',
+      message: '找不到工作表：' + SHEET_MENU,
+      items: []
+    };
+  }
+
+  const values = sheet.getDataRange().getValues();
+
+  if (values.length < 2) {
+    return {
+      status: 'success',
+      items: []
+    };
+  }
+
+  const headers = values[0].map(v => String(v || '').trim());
+
+  const categoryCol = headers.indexOf('種類');
+  const nameCol = headers.indexOf('產品名稱');
+  const priceCol = headers.indexOf('價格');
+  const descCol = headers.indexOf('說明');
+  const imageCol = headers.indexOf('圖片');
+
+  if (categoryCol < 0 || nameCol < 0 || priceCol < 0) {
+    return {
+      status: 'error',
+      message: '菜單表頭需要：種類、產品名稱、價格',
+      items: []
+    };
+  }
+
+  const items = [];
+
+  for (let r = 1; r < values.length; r++) {
+    const row = values[r];
+
+    const category = String(row[categoryCol] || '').trim();
+    const name = String(row[nameCol] || '').trim();
+    const price = Number(row[priceCol] || 0);
+    const description = descCol >= 0 ? String(row[descCol] || '').trim() : '';
+    const image = imageCol >= 0 ? String(row[imageCol] || '').trim() : '';
+
+    if (!name) continue;
+    if (!price || price <= 0) continue;
+
+    items.push({
+      category,
+      name,
+      price,
+      description,
+      image
+    });
+  }
+
+  return {
+    status: 'success',
+    items
+  };
+}
+
+function saveWebCheckout_(body) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = getOrCreateSheet_(ss, SHEET_ORDERS);
+
+  ensureOrderHeaders_(sheet);
+
+  const items = Array.isArray(body.items) ? body.items : [];
+
+  ensureItemHeaders_(sheet, items);
+
+  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0]
+    .map(v => String(v || '').trim());
+
+  const now = new Date();
+  const timeZone = Session.getScriptTimeZone();
+
+  const orderDate = Utilities.formatDate(now, timeZone, 'yyyy/MM/dd');
+  const createdTime = Utilities.formatDate(now, timeZone, 'HH:mm:ss');
+
+  const row = new Array(headers.length).fill('');
+
+  setByHeader_(row, headers, '訂單日期', orderDate);
+  setByHeader_(row, headers, '建立時間', createdTime);
+  setByHeader_(row, headers, '店別', String(body.storeName || '線上點餐'));
+  setByHeader_(row, headers, '付款方式', String(body.paymentMethodText || body.paymentMethod || ''));
+  setByHeader_(row, headers, '總金額', Number(body.total || 0));
+
+  items.forEach(item => {
+    const name = String(item.name || '').trim();
+    const quantity = Number(item.quantity || 0);
+
+    if (!name || quantity <= 0) return;
+
+    const colIndex = headers.indexOf(name);
+
+    if (colIndex >= 0) {
+      row[colIndex] = quantity;
+    }
+  });
+
+  sheet.appendRow(row);
+
+  const orderId = Utilities.formatDate(now, timeZone, 'yyyyMMddHHmmss') + '-' + Math.floor(Math.random() * 1000);
+
+  return {
+    status: 'success',
+    message: '訂單已送出',
+    orderId
+  };
+}
+
+function ensureOrderHeaders_(sheet) {
+  const lastColumn = Math.max(sheet.getLastColumn(), ORDER_FIXED_HEADERS.length);
+  const firstRow = sheet.getRange(1, 1, 1, lastColumn).getValues()[0]
+    .map(v => String(v || '').trim());
+
+  let changed = false;
+
+  for (let i = 0; i < ORDER_FIXED_HEADERS.length; i++) {
+    if (firstRow[i] !== ORDER_FIXED_HEADERS[i]) {
+      firstRow[i] = ORDER_FIXED_HEADERS[i];
+      changed = true;
+    }
+  }
+
+  if (changed || sheet.getLastRow() === 0) {
+    sheet.getRange(1, 1, 1, firstRow.length).setValues([firstRow]);
+  }
+}
+
+function ensureItemHeaders_(sheet, items) {
+  const lastColumn = Math.max(sheet.getLastColumn(), ORDER_FIXED_HEADERS.length);
+  let headers = sheet.getRange(1, 1, 1, lastColumn).getValues()[0]
+    .map(v => String(v || '').trim());
+
+  const existing = new Set(headers.filter(Boolean));
+
+  items.forEach(item => {
+    const name = String(item.name || '').trim();
+
+    if (!name) return;
+    if (existing.has(name)) return;
+
+    headers.push(name);
+    existing.add(name);
+  });
+
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+}
+
+function setByHeader_(row, headers, headerName, value) {
+  const index = headers.indexOf(headerName);
+  if (index >= 0) {
+    row[index] = value;
+  }
+}
+
+function getOrCreateSheet_(ss, sheetName) {
+  let sheet = ss.getSheetByName(sheetName);
+  if (!sheet) {
+    sheet = ss.insertSheet(sheetName);
+  }
+  return sheet;
+}
+
+function jsonOrJsonpOutput_(obj, e) {
+  const callback = e && e.parameter && e.parameter.callback
+    ? String(e.parameter.callback).trim()
+    : '';
+
+  const json = JSON.stringify(obj);
+
+  if (callback) {
+    return ContentService
+      .createTextOutput(callback + '(' + json + ');')
+      .setMimeType(ContentService.MimeType.JAVASCRIPT);
+  }
+
+  return ContentService
+    .createTextOutput(json)
+    .setMimeType(ContentService.MimeType.JSON);
+}e
