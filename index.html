@@ -649,6 +649,18 @@
       padding: 10px;
       margin-bottom: 8px;
     }
+    .member-block.own {
+      cursor: pointer;
+      border-color: var(--primary);
+      background: rgba(53,133,142,0.08);
+    }
+    
+    .member-edit-hint {
+      margin-top: 6px;
+      font-size: 12px;
+      color: var(--primary);
+      font-weight: 900;
+    }
 
     .member-block-head {
       display: flex;
@@ -924,7 +936,7 @@
           <input id="customerName" placeholder="請輸入姓名" />
         </div>
 
-        <div class="field">
+        <div class="field" id="customerPhoneField">
           <label id="phoneLabel">電話</label>
           <input id="customerPhone" placeholder="請輸入電話" inputmode="tel" />
         </div>
@@ -984,7 +996,7 @@
   <div id="toast" class="toast"></div>
 
   <script>
-    const API_URL = 'https://script.google.com/macros/s/AKfycbzvJXxtkkwuX_zUSjUC2N2V4CjQLXElT1wnW-0RaRSTcbRGdaHbxU2hujlz9mBpSOASoA/exec';
+    const API_URL = 'https://script.google.com/macros/s/AKfycbwox31_TqXPQZWzWt3woL1hOJR_fsyf8Jq5BW1ZakeKhnbhuvSUeDzLG5NRiqVzj1MdkQ/exec';
 
     let menuItems = [];
     let selectedCategory = '全部';
@@ -996,6 +1008,28 @@
     let currentGroup = null;
     let groupMembers = [];
     let groupRefreshTimer = null;
+
+    function getMemberStorageKey() {
+      return groupId ? 'group_member_' + groupId : 'group_member_normal';
+    }
+    
+    function getGroupMemberId() {
+      const key = groupId ? 'group_member_id_' + groupId : 'group_member_id_normal';
+      let id = '';
+    
+      try {
+        id = localStorage.getItem(key) || '';
+    
+        if (!id) {
+          id = 'M' + Date.now() + Math.floor(Math.random() * 10000);
+          localStorage.setItem(key, id);
+        }
+      } catch (error) {
+        id = 'M' + Date.now() + Math.floor(Math.random() * 10000);
+      }
+    
+      return id;
+    }
 
     function prefillGroupMemberInfo() {
       const nameInput = document.getElementById('customerName');
@@ -1279,15 +1313,27 @@
 
       if (groupId) {
         document.getElementById('checkoutModalTitle').textContent = '加入團訂';
-        document.getElementById('checkoutModalSubtitle').textContent = '請確認姓名與電話，餐點會加入此團訂。';
+        document.getElementById('checkoutModalSubtitle').textContent = isHostMode
+          ? '主揪資料會自動帶入，確認餐點後即可加入。'
+          : '請填寫你的姓名，餐點會加入此團訂。';
+      
         document.getElementById('paymentSection').style.display = 'none';
         document.getElementById('nameLabel').textContent = '成員姓名';
-        document.getElementById('phoneLabel').textContent = '成員電話';
         document.getElementById('submitOrderBtn').textContent = '加入團訂';
+      
+        const phoneField = document.getElementById('customerPhoneField');
+        const phoneLabel = document.getElementById('phoneLabel');
+      
+        if (isHostMode) {
+          phoneField.style.display = 'flex';
+          phoneLabel.textContent = '主揪電話';
+        } else {
+          phoneField.style.display = 'none';
+        }
       
         prefillGroupMemberInfo();
       }else {
-        document.getElementById('checkoutModalTitle').textContent = '確認訂單';
+              document.getElementById('checkoutModalTitle').textContent = '確認訂單';
         document.getElementById('checkoutModalSubtitle').textContent = '請填寫資料並選擇付款方式';
         document.getElementById('paymentSection').style.display = 'block';
         document.getElementById('nameLabel').textContent = '姓名';
@@ -1502,45 +1548,92 @@
 
     function renderGroupMembersSummary() {
       const box = document.getElementById('groupMembersSummary');
-
+    
       if (!groupId || !groupMembers.length) {
         box.style.display = 'none';
         box.innerHTML = '';
         return;
       }
-
+    
       box.style.display = 'block';
-
-      const total = groupMembers.reduce((sum, member) => sum + Number(member.subtotal || 0), 0);
+    
+      const myMemberId = getGroupMemberId();
+    
+      const total = groupMembers.reduce((sum, member) => {
+        return sum + Number(member.subtotal || 0);
+      }, 0);
+    
       const blocks = groupMembers.map(member => {
         const items = Array.isArray(member.items) ? member.items : [];
-        const lines = items.map(item => `${escapeHtml(item.name)} x ${Number(item.quantity || 0)}`).join('<br>');
-
+    
+        const lines = items.map(item => {
+          return `${escapeHtml(item.name)} x ${Number(item.quantity || 0)}`;
+        }).join('<br>');
+    
+        const isOwn = String(member.memberId || '') === String(myMemberId);
+    
         return `
-          <div class="member-block">
+          <div
+            class="member-block ${isOwn ? 'own' : ''}"
+            ${isOwn ? `onclick="editMyGroupItems('${escapeJs(member.memberId)}')"` : ''}
+          >
             <div class="member-block-head">
               <span>${escapeHtml(member.memberName || member.name || '未命名')}</span>
               <span>NT$${Number(member.subtotal || 0)}</span>
             </div>
-            <div class="member-block-items">${lines || '沒有品項'}</div>
+    
+            <div class="member-block-items">
+              ${lines || '沒有品項'}
+            </div>
+    
+            ${isOwn ? '<div class="member-edit-hint">點這裡可修改我的餐點</div>' : ''}
           </div>
         `;
       }).join('');
-
+    
       box.innerHTML = `
         <div class="member-summary-title">目前團訂 NT$${total}</div>
         ${blocks}
       `;
     }
+    function editMyGroupItems(memberId) {
+      const myMemberId = getGroupMemberId();
+    
+      if (String(memberId || '') !== String(myMemberId)) {
+        showToast('只能修改自己的餐點');
+        return;
+      }
+    
+      const member = groupMembers.find(m => String(m.memberId || '') === String(myMemberId));
+    
+      if (!member) {
+        showToast('找不到你的餐點');
+        return;
+      }
+    
+      cart = (member.items || []).map(item => ({
+        category: item.category || '',
+        name: item.name,
+        price: Number(item.price || 0),
+        quantity: Number(item.quantity || 0)
+      })).filter(item => item.name && item.quantity > 0);
+    
+      saveGroupMemberInfo(member.memberName || '', member.memberPhone || '');
+    
+      renderCart();
+      toggleMobileCart();
+    
+      showToast('已載入你的餐點，可修改後重新加入團訂');
+    }
 
     async function saveGroupItems() {
-      const memberName = document.getElementById('customerName').value.trim();
-      const memberPhone = document.getElementById('customerPhone').value.trim();
-      const note = document.getElementById('customerNote').value.trim();
-
-      if (!memberName) return showToast('請輸入成員姓名');
-      if (!memberPhone) return showToast('請輸入成員電話');
-      if (cart.length === 0) return showToast('尚未選擇餐點');
+     const memberName = document.getElementById('customerName').value.trim();
+    const memberPhone = document.getElementById('customerPhone').value.trim();
+    const note = document.getElementById('customerNote').value.trim();
+    const memberId = getGroupMemberId();
+    
+    if (!memberName) return showToast('請輸入成員姓名');
+    if (cart.length === 0) return showToast('尚未選擇餐點');
 
       const submitBtn = document.getElementById('submitOrderBtn');
       submitBtn.disabled = true;
@@ -1548,6 +1641,7 @@
 
       const payload = {
         groupId,
+        memberId,
         memberName,
         memberPhone,
         note,
@@ -1569,7 +1663,7 @@
           closeCheckout();
           clearCart();
         
-          // 不清空姓名電話，避免下次又要重填
+          // 姓名不要清掉，下次可以直接帶入
           document.getElementById('customerNote').value = '';
         
           showToast('已加入團訂');
@@ -1698,7 +1792,72 @@
         .replaceAll('\n', '\\n')
         .replaceAll('\r', '');
     }
+    function saveGroupMemberInfo(memberName, memberPhone) {
+  try {
+    localStorage.setItem(getMemberStorageKey(), JSON.stringify({
+      memberName,
+      memberPhone
+    }));
+  } catch (error) {}
+}
 
+  function prefillGroupMemberInfo() {
+    const nameInput = document.getElementById('customerName');
+    const phoneInput = document.getElementById('customerPhone');
+  
+    if (!nameInput || !phoneInput) return;
+  
+    if (isHostMode && currentGroup) {
+      nameInput.value = currentGroup.hostName || '';
+      phoneInput.value = currentGroup.hostPhone || '';
+      return;
+    }
+  
+    try {
+      const saved = JSON.parse(localStorage.getItem(getMemberStorageKey()) || '{}');
+  
+      if (saved.memberName) {
+        nameInput.value = saved.memberName;
+      }
+  
+      if (saved.memberPhone) {
+        phoneInput.value = saved.memberPhone;
+      }
+    } catch (error) {}
+  }
+    function saveGroupMemberInfo(memberName, memberPhone) {
+  try {
+    localStorage.setItem(getMemberStorageKey(), JSON.stringify({
+      memberName,
+      memberPhone
+    }));
+  } catch (error) {}
+}
+
+  function prefillGroupMemberInfo() {
+    const nameInput = document.getElementById('customerName');
+    const phoneInput = document.getElementById('customerPhone');
+  
+    if (!nameInput || !phoneInput) return;
+  
+    if (isHostMode && currentGroup) {
+      nameInput.value = currentGroup.hostName || '';
+      phoneInput.value = currentGroup.hostPhone || '';
+      return;
+    }
+  
+    try {
+      const saved = JSON.parse(localStorage.getItem(getMemberStorageKey()) || '{}');
+  
+      if (saved.memberName) {
+        nameInput.value = saved.memberName;
+      }
+  
+      if (saved.memberPhone) {
+        phoneInput.value = saved.memberPhone;
+      }
+    } catch (error) {}
+  }
     initPageMode();
     loadMenu();
     renderCart();
