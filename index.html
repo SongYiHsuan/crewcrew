@@ -879,9 +879,18 @@
         <div id="groupMembersSummary" class="member-summary" style="display:none;"></div>
 
         <div class="cart-action-row">
-          <button class="continue-shopping-btn" onclick="closeMobileCart()">繼續選購</button>
-          <button id="checkoutBtn" class="checkout-btn" onclick="openCheckout()" disabled>前往結帳</button>
-        </div>
+            <button class="continue-shopping-btn" onclick="closeMobileCart()">繼續選購</button>
+            <button id="checkoutBtn" class="checkout-btn" onclick="openCheckout()" disabled>前往結帳</button>
+          </div>
+          
+          <button
+            id="hostSubmitGroupCartBtn"
+            class="checkout-btn host-submit-cart-btn"
+            onclick="submitGroupOrder()"
+            style="display:none; margin-top:10px; background: var(--secondary);"
+          >
+            主揪送出整筆團訂
+          </button>
       </div>
     </aside>
   </main>
@@ -986,6 +995,7 @@
     let isHostMode = false;
     let currentGroup = null;
     let groupMembers = [];
+    let groupRefreshTimer = null;
 
     function jsonp(url) {
       return new Promise((resolve, reject) => {
@@ -1013,15 +1023,30 @@
       const params = new URLSearchParams(window.location.search);
       groupId = params.get('groupId') || '';
       isHostMode = params.get('host') === '1';
-
+    
       if (groupId) {
         document.getElementById('pageSubtitle').textContent = isHostMode ? '團訂主揪管理模式' : '團訂點餐模式';
         document.getElementById('cartTitle').textContent = isHostMode ? '主揪購物車' : '我的團訂餐點';
         document.getElementById('checkoutBtn').textContent = isHostMode ? '加入我的餐點' : '加入團訂';
+    
         document.getElementById('groupModeBanner').classList.add('show');
         document.getElementById('groupInfoCard').classList.remove('hidden');
-        document.getElementById('hostSubmitGroupBtn').style.display = isHostMode ? 'block' : 'none';
+    
+        const sideSubmitBtn = document.getElementById('hostSubmitGroupBtn');
+        if (sideSubmitBtn) {
+          sideSubmitBtn.style.display = isHostMode ? 'block' : 'none';
+        }
+    
+        const cartSubmitBtn = document.getElementById('hostSubmitGroupCartBtn');
+        if (cartSubmitBtn) {
+          cartSubmitBtn.style.display = isHostMode ? 'block' : 'none';
+        }
+    
         loadGroupOrder();
+    
+        if (isHostMode) {
+          startGroupAutoRefresh();
+        }
       }
     }
 
@@ -1349,23 +1374,39 @@
       }
     }
 
-    async function loadGroupOrder() {
+    async function loadGroupOrder(silent = false) {
       if (!groupId) return;
-
+    
       try {
         const data = await jsonp(API_URL + '?mode=getGroupOrder&groupId=' + encodeURIComponent(groupId));
-
+    
         if (data.status !== 'success') {
-          showToast(data.message || '讀取團訂失敗');
+          if (!silent) {
+            showToast(data.message || '讀取團訂失敗');
+          }
           return;
         }
-
+    
         currentGroup = data.group || null;
         groupMembers = data.members || [];
         renderGroupInfo();
       } catch (error) {
-        showToast('讀取團訂失敗：' + error.message);
+        if (!silent) {
+          showToast('讀取團訂失敗：' + error.message);
+        }
       }
+    }
+
+    function startGroupAutoRefresh() {
+      if (groupRefreshTimer) {
+        clearInterval(groupRefreshTimer);
+      }
+    
+      groupRefreshTimer = setInterval(() => {
+        if (groupId && isHostMode) {
+          loadGroupOrder(true);
+        }
+      }, 1000);
     }
 
     function renderGroupInfo() {
@@ -1466,25 +1507,36 @@
         submitBtn.textContent = '加入團訂';
       }
     }
-
     async function submitGroupOrder() {
       if (!groupId) return;
+    
+      if (!isHostMode) {
+        showToast('只有主揪可以送出團訂');
+        return;
+      }
+    
       if (!confirm('確定要送出整筆團訂嗎？送出後會寫入訂單紀錄。')) return;
-
-      const btn = document.getElementById('hostSubmitGroupBtn');
-      btn.disabled = true;
-      btn.textContent = '送出中...';
-
+    
+      const buttons = [
+        document.getElementById('hostSubmitGroupBtn'),
+        document.getElementById('hostSubmitGroupCartBtn')
+      ].filter(Boolean);
+    
+      buttons.forEach(btn => {
+        btn.disabled = true;
+        btn.textContent = '送出中...';
+      });
+    
       const payload = {
         groupId,
         paymentMethod: paymentMethod,
         paymentMethodText: paymentMethod,
         source: 'GROUP_WEB'
       };
-
+    
       try {
         const data = await jsonp(API_URL + '?mode=submitGroupOrder&payload=' + encodeURIComponent(JSON.stringify(payload)));
-
+    
         if (data.status === 'success') {
           showToast('團訂已送出，訂單編號：' + (data.orderId || ''));
           await loadGroupOrder();
@@ -1494,8 +1546,12 @@
       } catch (error) {
         showToast('送出團訂失敗：' + error.message);
       } finally {
-        btn.disabled = false;
-        btn.textContent = '主揪送出團訂';
+        buttons.forEach(btn => {
+          btn.disabled = false;
+          btn.textContent = btn.id === 'hostSubmitGroupCartBtn'
+            ? '主揪送出整筆團訂'
+            : '主揪送出團訂';
+        });
       }
     }
 
