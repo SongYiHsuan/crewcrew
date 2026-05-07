@@ -965,7 +965,7 @@
 
         <div class="field">
           <label>預計取餐時間</label>
-          <input id="pickupTimeInput" placeholder="例如：12:30" />
+          <input id="pickupTimeInput" type="datetime-local" />
         </div>
 
         <div class="field">
@@ -997,6 +997,39 @@
     let groupMembers = [];
     let groupRefreshTimer = null;
 
+    function prefillGroupMemberInfo() {
+      const nameInput = document.getElementById('customerName');
+      const phoneInput = document.getElementById('customerPhone');
+    
+      if (!nameInput || !phoneInput) return;
+    
+      // 主揪模式：優先帶入主揪資料
+      if (isHostMode && currentGroup) {
+        nameInput.value = currentGroup.hostName || '';
+        phoneInput.value = currentGroup.hostPhone || '';
+        return;
+      }
+    
+      // 跟團者：用這支手機之前填過的資料
+      try {
+        const saved = JSON.parse(localStorage.getItem(getMemberStorageKey()) || '{}');
+    
+        if (saved.memberName) {
+          nameInput.value = saved.memberName;
+        }
+    
+        if (saved.memberPhone) {
+          phoneInput.value = saved.memberPhone;
+        }
+      } catch (error) {
+        // localStorage 失敗就略過，不影響點餐
+      }
+    }
+    function getMemberStorageKey() {
+      return groupId ? 'group_member_' + groupId : 'group_member_normal';
+    }
+    
+
     function jsonp(url) {
       return new Promise((resolve, reject) => {
         const callbackName = 'jsonpCallback_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
@@ -1017,6 +1050,23 @@
 
         document.body.appendChild(script);
       });
+    }
+    function setDefaultPickupTime() {
+      const input = document.getElementById('pickupTimeInput');
+      if (!input) return;
+    
+      const now = new Date();
+    
+      // 預設往後 20 分鐘，比較符合實際備餐
+      now.setMinutes(now.getMinutes() + 20);
+    
+      const yyyy = now.getFullYear();
+      const mm = String(now.getMonth() + 1).padStart(2, '0');
+      const dd = String(now.getDate()).padStart(2, '0');
+      const hh = String(now.getHours()).padStart(2, '0');
+      const min = String(now.getMinutes()).padStart(2, '0');
+    
+      input.value = `${yyyy}-${mm}-${dd}T${hh}:${min}`;
     }
 
     function initPageMode() {
@@ -1229,12 +1279,14 @@
 
       if (groupId) {
         document.getElementById('checkoutModalTitle').textContent = '加入團訂';
-        document.getElementById('checkoutModalSubtitle').textContent = '請填寫你的姓名與電話，餐點會加入此團訂。';
+        document.getElementById('checkoutModalSubtitle').textContent = '請確認姓名與電話，餐點會加入此團訂。';
         document.getElementById('paymentSection').style.display = 'none';
         document.getElementById('nameLabel').textContent = '成員姓名';
         document.getElementById('phoneLabel').textContent = '成員電話';
         document.getElementById('submitOrderBtn').textContent = '加入團訂';
-      } else {
+      
+        prefillGroupMemberInfo();
+      }else {
         document.getElementById('checkoutModalTitle').textContent = '確認訂單';
         document.getElementById('checkoutModalSubtitle').textContent = '請填寫資料並選擇付款方式';
         document.getElementById('paymentSection').style.display = 'block';
@@ -1323,6 +1375,7 @@
     }
 
     function openCreateGroupModal() {
+      setDefaultPickupTime();
       document.getElementById('createGroupModal').classList.add('show');
     }
 
@@ -1334,7 +1387,8 @@
       const title = document.getElementById('groupTitleInput').value.trim();
       const hostName = document.getElementById('hostNameInput').value.trim();
       const hostPhone = document.getElementById('hostPhoneInput').value.trim();
-      const pickupTime = document.getElementById('pickupTimeInput').value.trim();
+      const pickupTimeRaw = document.getElementById('pickupTimeInput').value.trim();
+      const pickupTime = formatDateTimeLocal(pickupTimeRaw);
       const note = document.getElementById('groupNoteInput').value.trim();
 
       if (!title) return showToast('請輸入團訂名稱');
@@ -1359,11 +1413,19 @@
 
         if (data.status === 'success') {
           const newGroupId = data.groupId;
+        
+          try {
+            localStorage.setItem('group_member_' + newGroupId, JSON.stringify({
+              memberName: hostName,
+              memberPhone: hostPhone
+            }));
+          } catch (error) {}
+        
           const hostUrl = buildGroupUrl(newGroupId, true);
           closeCreateGroupModal();
           showToast('團訂已建立');
           window.location.href = hostUrl;
-        } else {
+        }else {
           showToast(data.message || '建立團訂失敗');
         }
       } catch (error) {
@@ -1372,6 +1434,18 @@
         btn.disabled = false;
         btn.textContent = '建立團訂';
       }
+    }
+    function formatDateTimeLocal(value) {
+      if (!value) return '';
+    
+      // value 會長這樣：2026-05-05T12:30
+      const parts = value.split('T');
+      if (parts.length !== 2) return value;
+    
+      const date = parts[0].replaceAll('-', '/');
+      const time = parts[1];
+    
+      return `${date} ${time}`;
     }
 
     async function loadGroupOrder(silent = false) {
@@ -1490,14 +1564,17 @@
         const data = await jsonp(API_URL + '?mode=saveGroupItems&payload=' + encodeURIComponent(JSON.stringify(payload)));
 
         if (data.status === 'success') {
+          saveGroupMemberInfo(memberName, memberPhone);
+        
           closeCheckout();
           clearCart();
-          document.getElementById('customerName').value = '';
-          document.getElementById('customerPhone').value = '';
+        
+          // 不清空姓名電話，避免下次又要重填
           document.getElementById('customerNote').value = '';
+        
           showToast('已加入團訂');
           await loadGroupOrder();
-        } else {
+        }else {
           showToast(data.message || '加入團訂失敗');
         }
       } catch (error) {
@@ -1505,6 +1582,16 @@
       } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = '加入團訂';
+      }
+    }
+    function saveGroupMemberInfo(memberName, memberPhone) {
+      try {
+        localStorage.setItem(getMemberStorageKey(), JSON.stringify({
+          memberName,
+          memberPhone
+        }));
+      } catch (error) {
+        // localStorage 失敗就略過
       }
     }
     async function submitGroupOrder() {
