@@ -20,9 +20,7 @@
       --shadow: 0 12px 28px rgba(0,0,0,0.08);
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -64,15 +62,30 @@
       opacity: 0.88;
     }
 
-    .cart-pill {
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .cart-pill,
+    .group-pill {
       border: 0;
       background: rgba(255,255,255,0.2);
       color: white;
       padding: 12px 16px;
       border-radius: 999px;
       font-size: 15px;
-      font-weight: 700;
+      font-weight: 800;
       cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .group-pill.primary {
+      background: rgba(255,255,255,0.92);
+      color: var(--primary);
     }
 
     .layout {
@@ -97,17 +110,6 @@
       padding: 16px;
       position: sticky;
       top: 92px;
-    }
-
-    .search {
-      width: 100%;
-      border: 1px solid var(--border);
-      background: white;
-      border-radius: 16px;
-      padding: 14px 14px;
-      font-size: 16px;
-      outline: none;
-      margin-bottom: 16px;
     }
 
     .section-title {
@@ -139,15 +141,48 @@
       color: white;
     }
 
-    .menu-panel {
-      padding: 18px;
+    .group-info-card {
+      margin-top: 16px;
+      padding: 14px;
+      background: rgba(255,255,255,0.72);
+      border: 1px solid var(--border);
+      border-radius: 16px;
     }
+
+    .group-info-card.hidden { display: none; }
+
+    .group-info-title {
+      font-weight: 900;
+      margin-bottom: 6px;
+    }
+
+    .group-info-line {
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 700;
+      line-height: 1.6;
+    }
+
+    .small-action-btn {
+      width: 100%;
+      margin-top: 10px;
+      border: 0;
+      border-radius: 12px;
+      padding: 10px 12px;
+      background: var(--primary);
+      color: white;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .menu-panel { padding: 18px; }
 
     .menu-head {
       display: flex;
       justify-content: space-between;
       align-items: end;
       margin-bottom: 14px;
+      gap: 12px;
     }
 
     .menu-title {
@@ -166,6 +201,7 @@
       grid-template-columns: repeat(auto-fill, minmax(165px, 1fr));
       gap: 12px;
     }
+
     .product-card {
       background: var(--card);
       border: 1px solid var(--border);
@@ -262,7 +298,7 @@
       align-items: center;
       border-bottom: 1px solid var(--border);
     }
-    
+
     .cart-title {
       font-size: 20px;
       font-weight: 900;
@@ -274,43 +310,6 @@
       color: var(--primary);
       font-weight: 800;
       cursor: pointer;
-    }
-    .cart-action-row {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 10px;
-      margin-top: 16px;
-    }
-    
-    .continue-shopping-btn {
-      display: none;
-      width: 100%;
-      border: 1px solid var(--border);
-      padding: 15px 16px;
-      border-radius: 16px;
-      background: rgba(255,255,255,0.82);
-      color: var(--text);
-      font-size: 17px;
-      font-weight: 900;
-      cursor: pointer;
-    }
-    
-    .checkout-btn {
-      width: 100%;
-      border: 0;
-      margin-top: 0;
-      padding: 15px 16px;
-      border-radius: 16px;
-      background: var(--primary);
-      color: white;
-      font-size: 17px;
-      font-weight: 900;
-      cursor: pointer;
-    }
-    
-    .checkout-btn:disabled {
-      opacity: 0.55;
-      cursor: not-allowed;
     }
 
     .cart-items {
@@ -425,6 +424,44 @@
       font-weight: 900;
     }
 
+    .cart-action-row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .continue-shopping-btn {
+      display: none;
+      width: 100%;
+      border: 1px solid var(--border);
+      padding: 15px 16px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.82);
+      color: var(--text);
+      font-size: 17px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .checkout-btn {
+      width: 100%;
+      border: 0;
+      margin-top: 0;
+      padding: 15px 16px;
+      border-radius: 16px;
+      background: var(--primary);
+      color: white;
+      font-size: 17px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .checkout-btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
     .mobile-cart-btn {
       display: none;
       position: fixed;
@@ -452,12 +489,12 @@
       padding: 18px;
     }
 
-    .modal-backdrop.show {
-      display: flex;
-    }
+    .modal-backdrop.show { display: flex; }
 
     .modal {
       width: min(560px, 100%);
+      max-height: calc(100vh - 36px);
+      overflow: auto;
       background: var(--background);
       border-radius: 24px;
       border: 1px solid var(--border);
@@ -504,6 +541,7 @@
       outline: none;
       background: rgba(255,255,255,0.9);
       font-family: inherit;
+      width: 100%;
     }
 
     .payment-grid {
@@ -554,6 +592,79 @@
       color: white;
     }
 
+    .primary-btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .group-mode-banner {
+      max-width: 1280px;
+      margin: 14px auto -6px;
+      padding: 0 18px;
+      display: none;
+    }
+
+    .group-mode-banner.show { display: block; }
+
+    .group-mode-inner {
+      background: rgba(255,255,255,0.84);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 14px 16px;
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .group-mode-title {
+      font-weight: 900;
+      color: var(--primary);
+    }
+
+    .group-mode-subtitle {
+      margin-top: 3px;
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .member-summary {
+      margin-top: 14px;
+      border-top: 1px solid var(--border);
+      padding-top: 12px;
+    }
+
+    .member-summary-title {
+      font-size: 15px;
+      font-weight: 900;
+      margin-bottom: 8px;
+    }
+
+    .member-block {
+      background: rgba(255,255,255,0.76);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 10px;
+      margin-bottom: 8px;
+    }
+
+    .member-block-head {
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    .member-block-items {
+      margin-top: 6px;
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.55;
+      font-weight: 700;
+    }
+
     .loading,
     .error {
       padding: 36px;
@@ -574,55 +685,27 @@
       font-weight: 800;
       display: none;
       z-index: 200;
+      max-width: calc(100vw - 32px);
+      text-align: center;
     }
 
-    .toast.show {
-      display: block;
-    }
+    .toast.show { display: block; }
 
     @media (max-width: 980px) {
-      .cart-action-row {
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-      }
-      
-      .continue-shopping-btn {
-        display: block;
-      }
-      
-      .checkout-btn {
-        font-size: 16px;
-        padding: 14px 10px;
-      }
-      
-      .continue-shopping-btn {
-        font-size: 16px;
-        padding: 14px 10px;
-      }
-      header {
-        padding: 14px 16px;
-      }
-    
-      .brand-title {
-        font-size: 20px;
-      }
-    
-      .brand-subtitle {
-        font-size: 12px;
-      }
-    
-      .cart-pill {
-        padding: 10px 12px;
-        font-size: 13px;
-      }
-    
+      header { padding: 14px 16px; }
+      .brand-title { font-size: 20px; }
+      .brand-subtitle { font-size: 12px; }
+      .header-inner { align-items: flex-start; }
+      .header-actions { gap: 8px; }
+      .cart-pill, .group-pill { padding: 10px 12px; font-size: 13px; }
+
       .layout {
         grid-template-columns: 1fr;
         margin: 14px auto;
         padding: 0 12px;
         gap: 12px;
       }
-    
+
       .side-panel {
         position: sticky;
         top: 72px;
@@ -630,18 +713,16 @@
         padding: 10px;
         border-radius: 18px;
       }
-    
-      .section-title {
-        display: none;
-      }
-    
+
+      .section-title { display: none; }
+
       .category-list {
         flex-direction: row;
         overflow-x: auto;
         padding-bottom: 2px;
         gap: 8px;
       }
-    
+
       .category-btn {
         white-space: nowrap;
         padding: 9px 13px;
@@ -649,75 +730,30 @@
         border-radius: 999px;
         flex: 0 0 auto;
       }
-    
-      .menu-panel {
-        padding: 12px;
-        border-radius: 18px;
-      }
-    
-      .menu-head {
-        margin-bottom: 10px;
-      }
-    
-      .menu-title {
-        font-size: 20px;
-      }
-    
-      .menu-count {
-        font-size: 12px;
-      }
-    
+
+      .group-info-card { display: none !important; }
+
+      .menu-panel { padding: 12px; border-radius: 18px; }
+      .menu-head { margin-bottom: 10px; }
+      .menu-title { font-size: 20px; }
+      .menu-count { font-size: 12px; }
+
       .product-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 10px;
       }
-    
-      .product-card {
-        min-height: 185px;
-        border-radius: 16px;
-      }
-    
-      .product-image {
-        height: 78px;
-      }
-    
-      .product-body {
-        padding: 9px 10px 10px;
-        gap: 5px;
-      }
-    
-      .product-name {
-        font-size: 14px;
-        line-height: 1.25;
-        min-height: 34px;
-      }
-    
-      .product-desc {
-        font-size: 11px;
-        line-height: 1.3;
-        -webkit-line-clamp: 1;
-        min-height: 14px;
-      }
-    
-      .product-footer {
-        gap: 6px;
-      }
-    
-      .price {
-        font-size: 15px;
-      }
-    
-      .add-btn {
-        width: 30px;
-        height: 30px;
-        font-size: 20px;
-        line-height: 30px;
-      }
-    
-      .cart-panel {
-        display: none;
-      }
-    
+
+      .product-card { min-height: 185px; border-radius: 16px; }
+      .product-image { height: 78px; }
+      .product-body { padding: 9px 10px 10px; gap: 5px; }
+      .product-name { font-size: 14px; line-height: 1.25; min-height: 34px; }
+      .product-desc { font-size: 11px; line-height: 1.3; -webkit-line-clamp: 1; min-height: 14px; }
+      .product-footer { gap: 6px; }
+      .price { font-size: 15px; }
+      .add-btn { width: 30px; height: 30px; font-size: 20px; line-height: 30px; }
+
+      .cart-panel { display: none; }
+
       .cart-panel.mobile-open {
         display: flex;
         position: fixed;
@@ -729,52 +765,41 @@
         max-height: none;
         border-radius: 20px;
       }
-    
-      .mobile-cart-btn {
+
+      .mobile-cart-btn { display: block; }
+
+      .cart-action-row {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      .continue-shopping-btn {
         display: block;
+        font-size: 16px;
+        padding: 14px 10px;
       }
-    
-      .payment-grid {
-        grid-template-columns: 1fr;
+
+      .checkout-btn {
+        font-size: 16px;
+        padding: 14px 10px;
       }
+
+      .payment-grid { grid-template-columns: 1fr; }
+
+      .group-mode-banner { margin: 10px auto -4px; padding: 0 12px; }
+      .group-mode-inner { align-items: flex-start; flex-direction: column; }
+      .modal-actions { grid-template-columns: 1fr; }
     }
+
     @media (max-width: 430px) {
-      .product-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 8px;
-      }
-    
-      .product-card {
-        min-height: 170px;
-      }
-    
-      .product-image {
-        height: 68px;
-      }
-    
-      .product-body {
-        padding: 8px;
-      }
-    
-      .product-name {
-        font-size: 13px;
-        min-height: 32px;
-      }
-    
-      .product-desc {
-        display: none;
-      }
-    
-      .price {
-        font-size: 14px;
-      }
-    
-      .add-btn {
-        width: 28px;
-        height: 28px;
-        font-size: 19px;
-        line-height: 28px;
-      }
+      .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+      .product-card { min-height: 170px; }
+      .product-image { height: 68px; }
+      .product-body { padding: 8px; }
+      .product-name { font-size: 13px; min-height: 32px; }
+      .product-desc { display: none; }
+      .price { font-size: 14px; }
+      .add-btn { width: 28px; height: 28px; font-size: 19px; line-height: 28px; }
     }
   </style>
 </head>
@@ -784,19 +809,41 @@
     <div class="header-inner">
       <div>
         <div class="brand-title">好膽賣早</div>
-        <div class="brand-subtitle">我們是crewcrew集團</div>
+        <div class="brand-subtitle" id="pageSubtitle">我們是 crewcrew 集團</div>
       </div>
 
-      <button class="cart-pill" onclick="toggleMobileCart()">
-        購物車 <span id="headerCartCount">0</span>｜NT$<span id="headerCartTotal">0</span>
-      </button>
+      <div class="header-actions">
+        <button class="group-pill primary" onclick="openCreateGroupModal()">我要開團</button>
+        <button class="cart-pill" onclick="toggleMobileCart()">
+          購物車 <span id="headerCartCount">0</span>｜NT$<span id="headerCartTotal">0</span>
+        </button>
+      </div>
     </div>
   </header>
+
+  <div id="groupModeBanner" class="group-mode-banner">
+    <div class="group-mode-inner">
+      <div>
+        <div class="group-mode-title" id="groupBannerTitle">團訂模式</div>
+        <div class="group-mode-subtitle" id="groupBannerSubtitle">請選擇餐點後加入團訂</div>
+      </div>
+      <button class="small-action-btn" style="width:auto; margin-top:0;" onclick="copyGroupLink()">複製團訂連結</button>
+    </div>
+  </div>
 
   <main class="layout">
     <aside class="panel side-panel">
       <div class="section-title">分類</div>
       <div id="categoryList" class="category-list"></div>
+
+      <div id="groupInfoCard" class="group-info-card hidden">
+        <div class="group-info-title">團訂資訊</div>
+        <div class="group-info-line" id="sideGroupTitle">-</div>
+        <div class="group-info-line" id="sideGroupPickup">-</div>
+        <div class="group-info-line" id="sideGroupStatus">-</div>
+        <button class="small-action-btn" onclick="copyGroupLink()">複製分享連結</button>
+        <button id="hostSubmitGroupBtn" class="small-action-btn" onclick="submitGroupOrder()" style="display:none; background: var(--secondary);">主揪送出團訂</button>
+      </div>
     </aside>
 
     <section class="panel menu-panel">
@@ -812,31 +859,28 @@
 
     <aside id="cartPanel" class="panel cart-panel">
       <div class="cart-header">
-        <div class="cart-title">購物車</div>
+        <div class="cart-title" id="cartTitle">購物車</div>
         <button class="clear-btn" onclick="clearCart()">清空</button>
       </div>
-    
+
       <div id="cartItems" class="cart-items"></div>
-    
+
       <div class="checkout-box">
         <div class="amount-row">
           <span>小計</span>
           <span>NT$<span id="subtotal">0</span></span>
         </div>
-    
+
         <div class="total-row">
           <span>總金額</span>
           <span class="total-price">NT$<span id="total">0</span></span>
         </div>
-    
+
+        <div id="groupMembersSummary" class="member-summary" style="display:none;"></div>
+
         <div class="cart-action-row">
-          <button class="continue-shopping-btn" onclick="closeMobileCart()">
-            繼續選購
-          </button>
-    
-          <button id="checkoutBtn" class="checkout-btn" onclick="openCheckout()" disabled>
-            前往結帳
-          </button>
+          <button class="continue-shopping-btn" onclick="closeMobileCart()">繼續選購</button>
+          <button id="checkoutBtn" class="checkout-btn" onclick="openCheckout()" disabled>前往結帳</button>
         </div>
       </div>
     </aside>
@@ -848,29 +892,31 @@
 
   <div id="checkoutModal" class="modal-backdrop">
     <div class="modal">
-      <div class="modal-title">確認訂單</div>
-      <div class="modal-subtitle">請填寫資料並選擇付款方式</div>
+      <div class="modal-title" id="checkoutModalTitle">確認訂單</div>
+      <div class="modal-subtitle" id="checkoutModalSubtitle">請填寫資料並選擇付款方式</div>
 
       <div class="amount-row">
         <span>總金額</span>
         <strong>NT$<span id="modalTotal">0</span></strong>
       </div>
 
-      <div class="section-title">付款方式</div>
-      <div class="payment-grid">
-        <button class="payment-btn active" data-payment="現金" onclick="selectPayment('現金')">現金</button>
-        <button class="payment-btn" data-payment="Line Pay" onclick="selectPayment('Line Pay')">Line Pay</button>
-        <button class="payment-btn" data-payment="台灣 Pay" onclick="selectPayment('台灣 Pay')">台灣 Pay</button>
+      <div id="paymentSection">
+        <div class="section-title">付款方式</div>
+        <div class="payment-grid">
+          <button class="payment-btn active" data-payment="現金" onclick="selectPayment('現金')">現金</button>
+          <button class="payment-btn" data-payment="Line Pay" onclick="selectPayment('Line Pay')">Line Pay</button>
+          <button class="payment-btn" data-payment="台灣 Pay" onclick="selectPayment('台灣 Pay')">台灣 Pay</button>
+        </div>
       </div>
 
       <div class="form-grid">
         <div class="field">
-          <label>姓名</label>
+          <label id="nameLabel">姓名</label>
           <input id="customerName" placeholder="請輸入姓名" />
         </div>
 
         <div class="field">
-          <label>電話</label>
+          <label id="phoneLabel">電話</label>
           <input id="customerPhone" placeholder="請輸入電話" inputmode="tel" />
         </div>
 
@@ -887,6 +933,45 @@
     </div>
   </div>
 
+  <div id="createGroupModal" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-title">建立團訂</div>
+      <div class="modal-subtitle">建立後會產生一組團訂連結，主揪可分享給大家點餐。</div>
+
+      <div class="form-grid">
+        <div class="field">
+          <label>團訂名稱</label>
+          <input id="groupTitleInput" placeholder="例如：公司午餐、早餐團" />
+        </div>
+
+        <div class="field">
+          <label>主揪姓名</label>
+          <input id="hostNameInput" placeholder="請輸入主揪姓名" />
+        </div>
+
+        <div class="field">
+          <label>主揪電話</label>
+          <input id="hostPhoneInput" placeholder="請輸入主揪電話" inputmode="tel" />
+        </div>
+
+        <div class="field">
+          <label>預計取餐時間</label>
+          <input id="pickupTimeInput" placeholder="例如：12:30" />
+        </div>
+
+        <div class="field">
+          <label>備註</label>
+          <textarea id="groupNoteInput" rows="3" placeholder="例如：12 點前截止、統一自取"></textarea>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="secondary-btn" onclick="closeCreateGroupModal()">取消</button>
+        <button id="createGroupBtn" class="primary-btn" onclick="createGroupOrder()">建立團訂</button>
+      </div>
+    </div>
+  </div>
+
   <div id="toast" class="toast"></div>
 
   <script>
@@ -896,6 +981,11 @@
     let selectedCategory = '全部';
     let cart = [];
     let paymentMethod = '現金';
+
+    let groupId = '';
+    let isHostMode = false;
+    let currentGroup = null;
+    let groupMembers = [];
 
     function jsonp(url) {
       return new Promise((resolve, reject) => {
@@ -919,12 +1009,27 @@
       });
     }
 
+    function initPageMode() {
+      const params = new URLSearchParams(window.location.search);
+      groupId = params.get('groupId') || '';
+      isHostMode = params.get('host') === '1';
+
+      if (groupId) {
+        document.getElementById('pageSubtitle').textContent = isHostMode ? '團訂主揪管理模式' : '團訂點餐模式';
+        document.getElementById('cartTitle').textContent = isHostMode ? '主揪購物車' : '我的團訂餐點';
+        document.getElementById('checkoutBtn').textContent = isHostMode ? '加入我的餐點' : '加入團訂';
+        document.getElementById('groupModeBanner').classList.add('show');
+        document.getElementById('groupInfoCard').classList.remove('hidden');
+        document.getElementById('hostSubmitGroupBtn').style.display = isHostMode ? 'block' : 'none';
+        loadGroupOrder();
+      }
+    }
+
     async function loadMenu() {
       const grid = document.getElementById('productGrid');
 
       try {
         grid.innerHTML = '<div class="loading">菜單載入中...</div>';
-
         const data = await jsonp(API_URL + '?mode=webMenu');
 
         if (data.status !== 'success') {
@@ -933,10 +1038,8 @@
         }
 
         menuItems = data.items || [];
-
         renderCategories();
         renderProducts();
-
       } catch (error) {
         grid.innerHTML = '<div class="error">菜單讀取失敗：' + error.message + '</div>';
       }
@@ -944,16 +1047,10 @@
 
     function renderCategories() {
       const list = document.getElementById('categoryList');
-
-      const categories = ['全部', ...Array.from(new Set(
-        menuItems.map(item => item.category).filter(Boolean)
-      ))];
+      const categories = ['全部', ...Array.from(new Set(menuItems.map(item => item.category).filter(Boolean)))];
 
       list.innerHTML = categories.map(category => `
-        <button
-          class="category-btn ${category === selectedCategory ? 'active' : ''}"
-          onclick="selectCategory('${escapeJs(category)}')"
-        >
+        <button class="category-btn ${category === selectedCategory ? 'active' : ''}" onclick="selectCategory('${escapeJs(category)}')">
           ${escapeHtml(category)}
         </button>
       `).join('');
@@ -967,9 +1064,7 @@
 
     function renderProducts() {
       const grid = document.getElementById('productGrid');
-      const filtered = menuItems.filter(item => {
-        return selectedCategory === '全部' || item.category === selectedCategory;
-      });
+      const filtered = menuItems.filter(item => selectedCategory === '全部' || item.category === selectedCategory);
 
       document.getElementById('currentCategoryTitle').textContent = selectedCategory;
       document.getElementById('menuCount').textContent = filtered.length + ' 項';
@@ -990,7 +1085,6 @@
             <div class="product-body">
               <div class="product-name">${escapeHtml(item.name)}</div>
               <div class="product-desc">${escapeHtml(item.description || '')}</div>
-
               <div class="product-footer">
                 <div class="price">NT$${Number(item.price || 0)}</div>
                 <button class="add-btn" onclick="addToCart('${escapeJs(item.name)}')">+</button>
@@ -1026,7 +1120,7 @@
       }
 
       renderCart();
-      showToast('已加入購物車');
+      showToast(groupId ? '已加入我的團訂餐點' : '已加入購物車');
     }
 
     function increaseQty(name) {
@@ -1067,7 +1161,6 @@
       } else {
         cartItems.innerHTML = cart.map(item => {
           const lineTotal = item.price * item.quantity;
-
           return `
             <div class="cart-item">
               <div class="cart-item-top">
@@ -1077,7 +1170,6 @@
                 </div>
                 <div class="cart-item-price">NT$${lineTotal}</div>
               </div>
-
               <div class="qty-row">
                 <button class="qty-btn" onclick="decreaseQty('${escapeJs(item.name)}')">−</button>
                 <div class="qty">${item.quantity}</div>
@@ -1109,6 +1201,23 @@
       if (cart.length === 0) return;
 
       document.getElementById('modalTotal').textContent = getTotal();
+
+      if (groupId) {
+        document.getElementById('checkoutModalTitle').textContent = '加入團訂';
+        document.getElementById('checkoutModalSubtitle').textContent = '請填寫你的姓名與電話，餐點會加入此團訂。';
+        document.getElementById('paymentSection').style.display = 'none';
+        document.getElementById('nameLabel').textContent = '成員姓名';
+        document.getElementById('phoneLabel').textContent = '成員電話';
+        document.getElementById('submitOrderBtn').textContent = '加入團訂';
+      } else {
+        document.getElementById('checkoutModalTitle').textContent = '確認訂單';
+        document.getElementById('checkoutModalSubtitle').textContent = '請填寫資料並選擇付款方式';
+        document.getElementById('paymentSection').style.display = 'block';
+        document.getElementById('nameLabel').textContent = '姓名';
+        document.getElementById('phoneLabel').textContent = '電話';
+        document.getElementById('submitOrderBtn').textContent = '送出訂單';
+      }
+
       document.getElementById('checkoutModal').classList.add('show');
     }
 
@@ -1118,31 +1227,28 @@
 
     function selectPayment(method) {
       paymentMethod = method;
-
       document.querySelectorAll('.payment-btn').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.payment === method);
       });
     }
 
     async function submitOrder() {
+      if (groupId) {
+        await saveGroupItems();
+        return;
+      }
+
+      await submitNormalOrder();
+    }
+
+    async function submitNormalOrder() {
       const name = document.getElementById('customerName').value.trim();
       const phone = document.getElementById('customerPhone').value.trim();
       const note = document.getElementById('customerNote').value.trim();
 
-      if (!name) {
-        showToast('請輸入姓名');
-        return;
-      }
-
-      if (!phone) {
-        showToast('請輸入電話');
-        return;
-      }
-
-      if (cart.length === 0) {
-        showToast('購物車是空的');
-        return;
-      }
+      if (!name) return showToast('請輸入姓名');
+      if (!phone) return showToast('請輸入電話');
+      if (cart.length === 0) return showToast('購物車是空的');
 
       const submitBtn = document.getElementById('submitOrderBtn');
       submitBtn.disabled = true;
@@ -1171,25 +1277,18 @@
       };
 
       try {
-        const data = await jsonp(
-          API_URL +
-          '?mode=webCheckout&payload=' +
-          encodeURIComponent(JSON.stringify(payload))
-        );
+        const data = await jsonp(API_URL + '?mode=webCheckout&payload=' + encodeURIComponent(JSON.stringify(payload)));
 
         if (data.status === 'success') {
           closeCheckout();
           clearCart();
-
           document.getElementById('customerName').value = '';
           document.getElementById('customerPhone').value = '';
           document.getElementById('customerNote').value = '';
-
           showToast('訂單已送出，訂單編號：' + (data.orderId || ''));
         } else {
           showToast(data.message || '訂單送出失敗');
         }
-
       } catch (error) {
         showToast('訂單送出失敗：' + error.message);
       } finally {
@@ -1198,9 +1297,236 @@
       }
     }
 
+    function openCreateGroupModal() {
+      document.getElementById('createGroupModal').classList.add('show');
+    }
+
+    function closeCreateGroupModal() {
+      document.getElementById('createGroupModal').classList.remove('show');
+    }
+
+    async function createGroupOrder() {
+      const title = document.getElementById('groupTitleInput').value.trim();
+      const hostName = document.getElementById('hostNameInput').value.trim();
+      const hostPhone = document.getElementById('hostPhoneInput').value.trim();
+      const pickupTime = document.getElementById('pickupTimeInput').value.trim();
+      const note = document.getElementById('groupNoteInput').value.trim();
+
+      if (!title) return showToast('請輸入團訂名稱');
+      if (!hostName) return showToast('請輸入主揪姓名');
+      if (!hostPhone) return showToast('請輸入主揪電話');
+
+      const btn = document.getElementById('createGroupBtn');
+      btn.disabled = true;
+      btn.textContent = '建立中...';
+
+      const payload = {
+        title,
+        hostName,
+        hostPhone,
+        pickupTime,
+        note,
+        source: 'GROUP_WEB'
+      };
+
+      try {
+        const data = await jsonp(API_URL + '?mode=createGroupOrder&payload=' + encodeURIComponent(JSON.stringify(payload)));
+
+        if (data.status === 'success') {
+          const newGroupId = data.groupId;
+          const hostUrl = buildGroupUrl(newGroupId, true);
+          closeCreateGroupModal();
+          showToast('團訂已建立');
+          window.location.href = hostUrl;
+        } else {
+          showToast(data.message || '建立團訂失敗');
+        }
+      } catch (error) {
+        showToast('建立團訂失敗：' + error.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '建立團訂';
+      }
+    }
+
+    async function loadGroupOrder() {
+      if (!groupId) return;
+
+      try {
+        const data = await jsonp(API_URL + '?mode=getGroupOrder&groupId=' + encodeURIComponent(groupId));
+
+        if (data.status !== 'success') {
+          showToast(data.message || '讀取團訂失敗');
+          return;
+        }
+
+        currentGroup = data.group || null;
+        groupMembers = data.members || [];
+        renderGroupInfo();
+      } catch (error) {
+        showToast('讀取團訂失敗：' + error.message);
+      }
+    }
+
+    function renderGroupInfo() {
+      if (!currentGroup) return;
+
+      const title = currentGroup.title || currentGroup.groupTitle || '團訂';
+      const pickup = currentGroup.pickupTime || '-';
+      const status = currentGroup.status || '開放中';
+
+      document.getElementById('groupBannerTitle').textContent = title;
+      document.getElementById('groupBannerSubtitle').textContent = '取餐時間：' + pickup + '｜狀態：' + status;
+
+      document.getElementById('sideGroupTitle').textContent = '名稱：' + title;
+      document.getElementById('sideGroupPickup').textContent = '取餐：' + pickup;
+      document.getElementById('sideGroupStatus').textContent = '狀態：' + status;
+
+      renderGroupMembersSummary();
+    }
+
+    function renderGroupMembersSummary() {
+      const box = document.getElementById('groupMembersSummary');
+
+      if (!groupId || !groupMembers.length) {
+        box.style.display = 'none';
+        box.innerHTML = '';
+        return;
+      }
+
+      box.style.display = 'block';
+
+      const total = groupMembers.reduce((sum, member) => sum + Number(member.subtotal || 0), 0);
+      const blocks = groupMembers.map(member => {
+        const items = Array.isArray(member.items) ? member.items : [];
+        const lines = items.map(item => `${escapeHtml(item.name)} x ${Number(item.quantity || 0)}`).join('<br>');
+
+        return `
+          <div class="member-block">
+            <div class="member-block-head">
+              <span>${escapeHtml(member.memberName || member.name || '未命名')}</span>
+              <span>NT$${Number(member.subtotal || 0)}</span>
+            </div>
+            <div class="member-block-items">${lines || '沒有品項'}</div>
+          </div>
+        `;
+      }).join('');
+
+      box.innerHTML = `
+        <div class="member-summary-title">目前團訂 NT$${total}</div>
+        ${blocks}
+      `;
+    }
+
+    async function saveGroupItems() {
+      const memberName = document.getElementById('customerName').value.trim();
+      const memberPhone = document.getElementById('customerPhone').value.trim();
+      const note = document.getElementById('customerNote').value.trim();
+
+      if (!memberName) return showToast('請輸入成員姓名');
+      if (!memberPhone) return showToast('請輸入成員電話');
+      if (cart.length === 0) return showToast('尚未選擇餐點');
+
+      const submitBtn = document.getElementById('submitOrderBtn');
+      submitBtn.disabled = true;
+      submitBtn.textContent = '加入中...';
+
+      const payload = {
+        groupId,
+        memberName,
+        memberPhone,
+        note,
+        items: cart.map(item => ({
+          category: item.category,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          lineTotal: item.price * item.quantity
+        }))
+      };
+
+      try {
+        const data = await jsonp(API_URL + '?mode=saveGroupItems&payload=' + encodeURIComponent(JSON.stringify(payload)));
+
+        if (data.status === 'success') {
+          closeCheckout();
+          clearCart();
+          document.getElementById('customerName').value = '';
+          document.getElementById('customerPhone').value = '';
+          document.getElementById('customerNote').value = '';
+          showToast('已加入團訂');
+          await loadGroupOrder();
+        } else {
+          showToast(data.message || '加入團訂失敗');
+        }
+      } catch (error) {
+        showToast('加入團訂失敗：' + error.message);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '加入團訂';
+      }
+    }
+
+    async function submitGroupOrder() {
+      if (!groupId) return;
+      if (!confirm('確定要送出整筆團訂嗎？送出後會寫入訂單紀錄。')) return;
+
+      const btn = document.getElementById('hostSubmitGroupBtn');
+      btn.disabled = true;
+      btn.textContent = '送出中...';
+
+      const payload = {
+        groupId,
+        paymentMethod: paymentMethod,
+        paymentMethodText: paymentMethod,
+        source: 'GROUP_WEB'
+      };
+
+      try {
+        const data = await jsonp(API_URL + '?mode=submitGroupOrder&payload=' + encodeURIComponent(JSON.stringify(payload)));
+
+        if (data.status === 'success') {
+          showToast('團訂已送出，訂單編號：' + (data.orderId || ''));
+          await loadGroupOrder();
+        } else {
+          showToast(data.message || '送出團訂失敗');
+        }
+      } catch (error) {
+        showToast('送出團訂失敗：' + error.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '主揪送出團訂';
+      }
+    }
+
+    function buildGroupUrl(id, hostMode) {
+      const url = new URL(window.location.href);
+      url.search = '';
+      url.searchParams.set('groupId', id);
+      if (hostMode) url.searchParams.set('host', '1');
+      return url.toString();
+    }
+
+    function getShareGroupUrl() {
+      if (!groupId) return window.location.href;
+      return buildGroupUrl(groupId, false);
+    }
+
+    async function copyGroupLink() {
+      const link = getShareGroupUrl();
+
+      try {
+        await navigator.clipboard.writeText(link);
+        showToast('已複製團訂連結');
+      } catch (error) {
+        prompt('請複製團訂連結', link);
+      }
+    }
+
     function toggleMobileCart() {
       document.getElementById('cartPanel').classList.toggle('mobile-open');
     }
+
     function closeMobileCart() {
       document.getElementById('cartPanel').classList.remove('mobile-open');
     }
@@ -1209,10 +1535,7 @@
       const toast = document.getElementById('toast');
       toast.textContent = message;
       toast.classList.add('show');
-
-      setTimeout(() => {
-        toast.classList.remove('show');
-      }, 2200);
+      setTimeout(() => toast.classList.remove('show'), 2200);
     }
 
     function escapeHtml(value) {
@@ -1233,6 +1556,7 @@
         .replaceAll('\r', '');
     }
 
+    initPageMode();
     loadMenu();
     renderCart();
   </script>
