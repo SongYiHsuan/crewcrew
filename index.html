@@ -1026,6 +1026,8 @@
   </div>
 
   <div id="toast" class="toast"></div>
+  
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
   <script>
     const API_URL = 'https://script.google.com/macros/s/AKfycbzQ609Jxq2ZSnRRORcSBsSxZN9Mh3ODxhOXGd-Ae46bQhusqL7paPXusHI6iNF7-kJCdw/exec';
@@ -1034,6 +1036,14 @@
     let selectedCategory = '全部';
     let cart = [];
     let paymentMethod = '現金';
+    
+    const LIFF_ID = 'TXnzDzYqp7tsJSwWkGFgoiQvGFZ4gkJzF45op2AMRdGdOhFwvJv/QTCsdre+xqcj3E976IjVeEyJE8jtZhNXB62wzhY4gJujl28zs2rovFUAh6b97GzIuEE6CcoHY6z0Mmh1BkKIYkqv3d/w1O2G4QdB04t89/1O/w1cDnyilFU=';
+
+    let lineProfile = {
+      lineUserId: '',
+      lineDisplayName: '',
+      linePictureUrl: ''
+    };
 
     let groupId = '';
     let isHostMode = false;
@@ -1116,6 +1126,34 @@
 
         document.body.appendChild(script);
       });
+    }
+    async function initLineMember() {
+      try {
+        if (!window.liff) {
+          console.warn('LIFF SDK 尚未載入');
+          return;
+        }
+    
+        await liff.init({ liffId: LIFF_ID });
+    
+        if (!liff.isLoggedIn()) {
+          liff.login();
+          return;
+        }
+    
+        const profile = await liff.getProfile();
+    
+        lineProfile = {
+          lineUserId: profile.userId || '',
+          lineDisplayName: profile.displayName || '',
+          linePictureUrl: profile.pictureUrl || ''
+        };
+    
+        console.log('LINE 會員資料', lineProfile);
+    
+      } catch (error) {
+        console.warn('LINE 會員初始化失敗', error);
+      }
     }
     function setDefaultPickupTime() {
       const input = document.getElementById('pickupTimeInput');
@@ -1424,16 +1462,24 @@
       const payload = {
         storeName: '線上點餐',
         storeCode: 'WEB',
+      
         customerName: name,
         customerPhone: phone,
         customerNote: note,
+      
+        lineUserId: lineProfile.lineUserId || '',
+        lineDisplayName: lineProfile.lineDisplayName || '',
+        linePictureUrl: lineProfile.linePictureUrl || '',
+      
         paymentMethod: paymentMethod,
         paymentMethodText: paymentMethod,
+      
         subtotal: getTotal(),
         discountType: 'none',
         discountValue: 0,
         discountAmount: 0,
         total: getTotal(),
+      
         items: cart.map(item => ({
           category: item.category,
           name: item.name,
@@ -1945,6 +1991,7 @@
       }
     } catch (error) {}
   }
+    initLineMember();
     initPageMode();
     loadMenu();
     renderCart();
