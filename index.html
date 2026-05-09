@@ -2081,12 +2081,14 @@
       }
     } catch (error) {}
   }
-
-   (function startApp() {
-      initLineMember();
+    (function startApp() {
+      // 先讓菜單和畫面正常跑起來
       initPageMode();
       loadMenu();
       renderCart();
+    
+      // LINE / LIFF 資料另外背景取得，不要影響菜單載入
+      initLiffMember();
     })();
   </script>
 </body>
