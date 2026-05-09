@@ -1051,18 +1051,6 @@
     let groupMembers = [];
     let groupRefreshTimer = null;
     
-    let lineProfile = {
-      lineUserId: '',
-      lineDisplayName: '',
-      linePictureUrl: ''
-    };
-
-    let groupId = '';
-    let isHostMode = false;
-    let currentGroup = null;
-    let groupMembers = [];
-    let groupRefreshTimer = null;
-
     function getMemberStorageKey() {
       return groupId ? 'group_member_' + groupId : 'group_member_normal';
     }
@@ -1137,6 +1125,30 @@
 
         document.body.appendChild(script);
       });
+    }
+    async function initLiffMember() {
+      try {
+        await liff.init({ liffId: LIFF_ID });
+    
+        if (!liff.isLoggedIn()) {
+          liff.login({
+            redirectUri: window.location.href
+          });
+          return;
+        }
+    
+        const profile = await liff.getProfile();
+    
+        lineProfile = {
+          lineUserId: profile.userId || '',
+          lineDisplayName: profile.displayName || '',
+          linePictureUrl: profile.pictureUrl || ''
+        };
+    
+        console.log('LINE profile:', lineProfile);
+      } catch (error) {
+        console.warn('LIFF 初始化失敗，不影響一般點餐：', error);
+      }
     }
     function setDefaultPickupTime() {
       const input = document.getElementById('pickupTimeInput');
@@ -1531,9 +1543,9 @@
         pickupTime,
         note,
       
-        lineUserId: lineUserId,
-        lineDisplayName: lineDisplayName,
-        linePictureUrl: linePictureUrl,
+        lineUserId: lineProfile.lineUserId || '',
+        lineDisplayName: lineProfile.lineDisplayName || '',
+        linePictureUrl: lineProfile.linePictureUrl || '',
       
         source: 'GROUP_WEB'
       };
@@ -1744,6 +1756,7 @@
 
       const payload = {
         groupId,
+        memberId,
         memberName,
         memberPhone,
       
@@ -1989,10 +2002,12 @@
       }
     } catch (error) {}
   }
-    initLiffMember();
-    initPageMode();
-    loadMenu();
-    renderCart();
+   (async function startApp() {
+      await initLiffMember();
+      initPageMode();
+      loadMenu();
+      renderCart();
+    })();
   </script>
 </body>
 </html>
