@@ -1028,24 +1028,29 @@
 
   <div id="toast" class="toast"></div>
   
-  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-
   <script>
     const API_URL = 'https://script.google.com/macros/s/AKfycbyhGpP3iavRJuL3R9yMLI2e76v99kUiS0e8_028zbUmzwsTk9z3x9IyYAIEZoZ7CtVbhA/exec';
 
+
     const LIFF_ID = '2010023878-EWi7Mfxe';
-
-    let lineUserId = '';
-    let lineDisplayName = '';
-    let linePictureUrl = '';
-
+    
+    let lineProfile = {
+      lineUserId: '',
+      lineDisplayName: '',
+      linePictureUrl: ''
+    };
+    
     let menuItems = [];
     let selectedCategory = '全部';
     let cart = [];
     let paymentMethod = '現金';
     
-    const LIFF_ID = 'TXnzDzYqp7tsJSwWkGFgoiQvGFZ4gkJzF45op2AMRdGdOhFwvJv/QTCsdre+xqcj3E976IjVeEyJE8jtZhNXB62wzhY4gJujl28zs2rovFUAh6b97GzIuEE6CcoHY6z0Mmh1BkKIYkqv3d/w1O2G4QdB04t89/1O/w1cDnyilFU=';
-
+    let groupId = '';
+    let isHostMode = false;
+    let currentGroup = null;
+    let groupMembers = [];
+    let groupRefreshTimer = null;
+    
     let lineProfile = {
       lineUserId: '',
       lineDisplayName: '',
@@ -1112,50 +1117,6 @@
       return groupId ? 'group_member_' + groupId : 'group_member_normal';
     }
 
-    async function initLiffMember() {
-      try {
-        if (typeof liff === 'undefined') {
-          console.warn('LIFF SDK 尚未載入');
-          return;
-        }
-    
-        await liff.init({ liffId: LIFF_ID });
-    
-        if (!liff.isLoggedIn()) {
-          liff.login({
-            redirectUri: window.location.href
-          });
-          return;
-        }
-    
-        const profile = await liff.getProfile();
-    
-        lineUserId = profile.userId || '';
-        lineDisplayName = profile.displayName || '';
-        linePictureUrl = profile.pictureUrl || '';
-    
-        console.log('LINE UserId:', lineUserId);
-        console.log('LINE Name:', lineDisplayName);
-    
-        if (lineDisplayName) {
-          const nameInput = document.getElementById('customerName');
-          const hostNameInput = document.getElementById('hostNameInput');
-    
-          if (nameInput && !nameInput.value) {
-            nameInput.value = lineDisplayName;
-          }
-    
-          if (hostNameInput && !hostNameInput.value) {
-            hostNameInput.value = lineDisplayName;
-          }
-        }
-    
-      } catch (error) {
-        console.error('LIFF 初始化失敗', error);
-      }
-    }
-    
-
     function jsonp(url) {
       return new Promise((resolve, reject) => {
         const callbackName = 'jsonpCallback_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
@@ -1176,34 +1137,6 @@
 
         document.body.appendChild(script);
       });
-    }
-    async function initLineMember() {
-      try {
-        if (!window.liff) {
-          console.warn('LIFF SDK 尚未載入');
-          return;
-        }
-    
-        await liff.init({ liffId: LIFF_ID });
-    
-        if (!liff.isLoggedIn()) {
-          liff.login();
-          return;
-        }
-    
-        const profile = await liff.getProfile();
-    
-        lineProfile = {
-          lineUserId: profile.userId || '',
-          lineDisplayName: profile.displayName || '',
-          linePictureUrl: profile.pictureUrl || ''
-        };
-    
-        console.log('LINE 會員資料', lineProfile);
-    
-      } catch (error) {
-        console.warn('LINE 會員初始化失敗', error);
-      }
     }
     function setDefaultPickupTime() {
       const input = document.getElementById('pickupTimeInput');
@@ -1814,9 +1747,9 @@
         memberName,
         memberPhone,
       
-        lineUserId: lineUserId,
-        lineDisplayName: lineDisplayName,
-        linePictureUrl: linePictureUrl,
+        lineUserId: lineProfile.lineUserId || '',
+        lineDisplayName: lineProfile.lineDisplayName || '',
+        linePictureUrl: lineProfile.linePictureUrl || '',
       
         note,
         items: cart.map(item => ({
