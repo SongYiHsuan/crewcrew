@@ -1097,10 +1097,6 @@
       return getSavedHostToken(groupId);
     }
     
-    function getMemberStorageKey() {
-      return groupId ? 'group_member_' + groupId : 'group_member_normal';
-    }
-    
     function getGroupMemberId() {
       const key = groupId ? 'group_member_id_' + groupId : 'group_member_id_normal';
       let id = '';
@@ -1119,34 +1115,6 @@
       return id;
     }
 
-    function prefillGroupMemberInfo() {
-      const nameInput = document.getElementById('customerName');
-      const phoneInput = document.getElementById('customerPhone');
-    
-      if (!nameInput || !phoneInput) return;
-    
-      // 主揪模式：優先帶入主揪資料
-      if (isHostMode && currentGroup) {
-        nameInput.value = currentGroup.hostName || '';
-        phoneInput.value = currentGroup.hostPhone || '';
-        return;
-      }
-    
-      // 跟團者：用這支手機之前填過的資料
-      try {
-        const saved = JSON.parse(localStorage.getItem(getMemberStorageKey()) || '{}');
-    
-        if (saved.memberName) {
-          nameInput.value = saved.memberName;
-        }
-    
-        if (saved.memberPhone) {
-          phoneInput.value = saved.memberPhone;
-        }
-      } catch (error) {
-        // localStorage 失敗就略過，不影響點餐
-      }
-    }
     function getMemberStorageKey() {
       return groupId ? 'group_member_' + groupId : 'group_member_normal';
     }
@@ -1893,11 +1861,13 @@
     async function submitGroupOrder() {
       if (!groupId) return;
     
-      if (!isHostMode) {
-        showToast('只有主揪可以送出團訂');
-        return;
-      }
-    
+     const hostToken = getCurrentHostToken();
+  
+    if (!hostToken) {
+      showToast('主揪身份已遺失，請使用建立團訂後的主揪連結重新進入');
+      return;
+    }
+      
       if (!confirm('確定要送出整筆團訂嗎？送出後會寫入訂單紀錄。')) return;
     
       const buttons = [
@@ -1912,6 +1882,7 @@
     
       const payload = {
         groupId,
+        hostToken,
         paymentMethod: paymentMethod,
         paymentMethodText: paymentMethod,
         source: 'GROUP_WEB'
@@ -2028,14 +1999,6 @@
         .replaceAll('\n', '\\n')
         .replaceAll('\r', '');
     }
-    function saveGroupMemberInfo(memberName, memberPhone) {
-  try {
-    localStorage.setItem(getMemberStorageKey(), JSON.stringify({
-      memberName,
-      memberPhone
-    }));
-  } catch (error) {}
-}
 
   function prefillGroupMemberInfo() {
     const nameInput = document.getElementById('customerName');
@@ -2094,11 +2057,13 @@
       }
     } catch (error) {}
   }
-   (async function startApp() {
-      await initLiffMember();
+   (function startApp() {
       initPageMode();
       loadMenu();
       renderCart();
+    
+      // LINE 資料有就補，沒有也不影響團訂
+      initLiffMember();
     })();
   </script>
 </body>
