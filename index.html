@@ -1783,7 +1783,13 @@
     
         if (data.status === 'success') {
           showToast('團訂已送出，訂單編號：' + (data.orderId || ''));
-          await loadGroupOrder();
+        
+          leaveGroupMode();
+        
+          setTimeout(() => {
+            window.location.href = window.location.origin + window.location.pathname;
+          }, 900);
+        
         } else {
           showToast(data.message || '送出團訂失敗');
         }
@@ -1822,7 +1828,25 @@
         prompt('請複製團訂連結', link);
       }
     }
-
+    function leaveGroupMode() {
+      groupId = '';
+      isHostMode = false;
+      currentGroup = null;
+      groupMembers = [];
+    
+      document.getElementById('pageSubtitle').textContent = '我們是 crewcrew 集團';
+      document.getElementById('cartTitle').textContent = '購物車';
+      document.getElementById('checkoutBtn').textContent = '前往結帳';
+    
+      document.getElementById('groupModeBanner').classList.remove('show');
+      document.getElementById('groupInfoCard').classList.add('hidden');
+      document.getElementById('hostSubmitGroupBtn').style.display = 'none';
+    
+      document.getElementById('groupMembersSummary').style.display = 'none';
+      document.getElementById('groupMembersSummary').innerHTML = '';
+    
+      clearCart();
+    }
     function toggleMobileCart() {
       document.getElementById('cartPanel').classList.toggle('mobile-open');
     }
