@@ -1029,7 +1029,7 @@
   <div id="toast" class="toast"></div>
   
   <script>
-    const API_URL = 'https://script.google.com/macros/s/AKfycbwo3kHfX9mirDANWSKXlDfAg8tOmSv5PCRD85zys5Pkfb93Nlp_xrWucbcO6eGExaGbOA/exec';
+    const API_URL = 'https://script.google.com/macros/s/AKfycbxMx3nz1hBA4pI4dfcHKo14zN3JS-Mj0i_TOzJSuR5prnB4CPRPdRGFomFDDuQQjRUDpg/exec';
 
 
     const LIFF_ID = '2010023878-EWi7Mfxe';
@@ -1628,18 +1628,20 @@
         hostPhone,
         pickupTime,
         note,
+        source: 'GROUP_WEB',
       
+        // 主揪權限 Token，後端必須收到
         hostToken,
       
+        // 主揪 LINE 資料
         hostLineUserId: lineProfile.lineUserId || '',
         hostLineDisplayName: lineProfile.lineDisplayName || '',
         hostLinePictureUrl: lineProfile.linePictureUrl || '',
       
+        // 保險：後端也可以吃這組欄位
         lineUserId: lineProfile.lineUserId || '',
         lineDisplayName: lineProfile.lineDisplayName || '',
-        linePictureUrl: lineProfile.linePictureUrl || '',
-      
-        source: 'GROUP_WEB'
+        linePictureUrl: lineProfile.linePictureUrl || ''
       };
 
       try {
@@ -1926,15 +1928,23 @@
         btn.disabled = true;
         btn.textContent = '送出中...';
       });
-    
       const payload = {
         groupId,
         hostToken,
+      
         paymentMethod: paymentMethod,
         paymentMethodText: paymentMethod,
-        source: 'GROUP_WEB'
+        source: 'GROUP_WEB',
+      
+        hostLineUserId: lineProfile.lineUserId || '',
+        hostLineDisplayName: lineProfile.lineDisplayName || '',
+        hostLinePictureUrl: lineProfile.linePictureUrl || '',
+      
+        lineUserId: lineProfile.lineUserId || '',
+        lineDisplayName: lineProfile.lineDisplayName || '',
+        linePictureUrl: lineProfile.linePictureUrl || ''
       };
-    
+      
       try {
         const data = await jsonp(API_URL + '?mode=submitGroupOrder&payload=' + encodeURIComponent(JSON.stringify(payload)));
     
@@ -2073,12 +2083,10 @@
   }
 
    (function startApp() {
+      initLineMember();
       initPageMode();
       loadMenu();
       renderCart();
-    
-      // LINE 資料有就補，沒有也不影響團訂
-      initLiffMember();
     })();
   </script>
 </body>
