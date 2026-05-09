@@ -1029,7 +1029,7 @@
   <div id="toast" class="toast"></div>
   
   <script>
-    const API_URL = 'https://script.google.com/macros/s/AKfycbzktlfKqb0_HjAv4oPr0RSwC8onKAJX22VxNWW3fn6ldHyvfytj80W0sfgkPSxYhi8NSQ/exec';
+    const API_URL = 'https://script.google.com/macros/s/AKfycbwo3kHfX9mirDANWSKXlDfAg8tOmSv5PCRD85zys5Pkfb93Nlp_xrWucbcO6eGExaGbOA/exec';
 
 
     const LIFF_ID = '2010023878-EWi7Mfxe';
@@ -1168,6 +1168,44 @@
         console.warn('LIFF 初始化失敗，不影響一般點餐：', error);
       }
     }
+    async function ensureHostLineProfile() {
+      if (typeof liff === 'undefined') {
+        showToast('LINE LIFF 尚未載入，請稍後再試');
+        return false;
+      }
+    
+      try {
+        await liff.init({ liffId: LIFF_ID });
+    
+        if (!liff.isLoggedIn()) {
+          liff.login({
+            redirectUri: window.location.href
+          });
+          return false;
+        }
+    
+        const profile = await liff.getProfile();
+    
+        lineProfile = {
+          lineUserId: profile.userId || '',
+          lineDisplayName: profile.displayName || '',
+          linePictureUrl: profile.pictureUrl || ''
+        };
+    
+        if (!lineProfile.lineUserId) {
+          showToast('無法取得 LINE UserId，請重新從 LINE 開啟');
+          return false;
+        }
+    
+        return true;
+    
+      } catch (error) {
+        console.warn('取得主揪 LINE 資料失敗：', error);
+        showToast('取得 LINE 資料失敗，請重新開啟頁面');
+        return false;
+      }
+    }
+    
     function setDefaultPickupTime() {
       const input = document.getElementById('pickupTimeInput');
       if (!input) return;
@@ -1552,7 +1590,10 @@
       }
     }
 
-    function openCreateGroupModal() {
+    async function openCreateGroupModal() {
+      const ok = await ensureHostLineProfile();
+      if (!ok) return;
+    
       setDefaultPickupTime();
       document.getElementById('createGroupModal').classList.add('show');
     }
@@ -1562,6 +1603,8 @@
     }
 
     async function createGroupOrder() {
+      const ok = await ensureHostLineProfile();
+      if (!ok) return;
       const title = document.getElementById('groupTitleInput').value.trim();
       const hostName = document.getElementById('hostNameInput').value.trim();
       const hostPhone = document.getElementById('hostPhoneInput').value.trim();
@@ -1587,6 +1630,10 @@
         note,
       
         hostToken,
+      
+        hostLineUserId: lineProfile.lineUserId || '',
+        hostLineDisplayName: lineProfile.lineDisplayName || '',
+        hostLinePictureUrl: lineProfile.linePictureUrl || '',
       
         lineUserId: lineProfile.lineUserId || '',
         lineDisplayName: lineProfile.lineDisplayName || '',
@@ -2024,39 +2071,7 @@
       }
     } catch (error) {}
   }
-    function saveGroupMemberInfo(memberName, memberPhone) {
-  try {
-    localStorage.setItem(getMemberStorageKey(), JSON.stringify({
-      memberName,
-      memberPhone
-    }));
-  } catch (error) {}
-}
 
-  function prefillGroupMemberInfo() {
-    const nameInput = document.getElementById('customerName');
-    const phoneInput = document.getElementById('customerPhone');
-  
-    if (!nameInput || !phoneInput) return;
-  
-    if (isHostMode && currentGroup) {
-      nameInput.value = currentGroup.hostName || '';
-      phoneInput.value = currentGroup.hostPhone || '';
-      return;
-    }
-  
-    try {
-      const saved = JSON.parse(localStorage.getItem(getMemberStorageKey()) || '{}');
-  
-      if (saved.memberName) {
-        nameInput.value = saved.memberName;
-      }
-  
-      if (saved.memberPhone) {
-        phoneInput.value = saved.memberPhone;
-      }
-    } catch (error) {}
-  }
    (function startApp() {
       initPageMode();
       loadMenu();
