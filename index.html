@@ -1029,7 +1029,7 @@
   <div id="toast" class="toast"></div>
   
   <script>
-    const API_URL = 'https://script.google.com/macros/s/AKfycby04c2ilqyFrIFZ1AJxP4YUPnGEo-_0zFGLR3xPXBGkRmzgIreXjVmd33E1ONtLVk2RbA/exec';
+    const API_URL = 'https://script.google.com/macros/s/AKfycbwpLmNhutbNMhBlMhqI9KMP9rqw9VlqSkFgc8H431UsdAd6BhKh0B0CnLraxI-O3vbLJA/exec';
 
 
     const LIFF_ID = '2010023878-EWi7Mfxe';
@@ -1050,7 +1050,9 @@
     let currentGroup = null;
     let groupMembers = [];
     let groupRefreshTimer = null;
+    
     const GROUP_HOST_TOKEN_PREFIX = 'group_host_token_';
+    const ACTIVE_HOST_GROUP_KEY = 'active_host_group';
 
     function createHostToken() {
       if (window.crypto && crypto.getRandomValues) {
@@ -1078,6 +1080,39 @@
       } catch (error) {
         return '';
       }
+    }
+    function saveActiveHostGroup(groupId, hostToken, hostName = '', hostPhone = '') {
+      if (!groupId || !hostToken) return;
+    
+      try {
+        localStorage.setItem(ACTIVE_HOST_GROUP_KEY, JSON.stringify({
+          groupId,
+          hostToken,
+          hostName,
+          hostPhone,
+          savedAt: Date.now()
+        }));
+      } catch (error) {}
+    }
+    
+    function getActiveHostGroup() {
+      try {
+        const raw = localStorage.getItem(ACTIVE_HOST_GROUP_KEY);
+        if (!raw) return null;
+    
+        const data = JSON.parse(raw);
+        if (!data.groupId || !data.hostToken) return null;
+    
+        return data;
+      } catch (error) {
+        return null;
+      }
+    }
+    
+    function clearActiveHostGroup() {
+      try {
+        localStorage.removeItem(ACTIVE_HOST_GROUP_KEY);
+      } catch (error) {}
     }
     
     function hasHostPermission(groupId, urlHostToken) {
@@ -1233,58 +1268,86 @@
     
       input.value = `${yyyy}-${mm}-${dd}T${hh}:${min}`;
     }
+
     function initPageMode() {
       const params = new URLSearchParams(window.location.search);
     
-      groupId = params.get('groupId') || '';
+      let urlGroupId = params.get('groupId') || '';
+      let urlHostToken = params.get('hostToken') || '';
     
-      const urlHostToken = params.get('hostToken') || '';
       const oldHostFlag = params.get('host') === '1';
+      const roleHostFlag = params.get('role') === 'host';
     
-      // 新版：用 hostToken + localStorage 判斷主揪
-      // 舊版 host=1 仍相容，但建議以後改用 hostToken。
-      isHostMode = groupId && (
-        hasHostPermission(groupId, urlHostToken) ||
-        oldHostFlag
-      );
+      // 1. 正常情況：網址有 groupId
+      groupId = urlGroupId;
     
-      if (oldHostFlag && groupId && !getSavedHostToken(groupId)) {
-        // 舊版網址沒有 token，只能先暫時保留主揪畫面。
-        // 建議建立新團後會用新版 hostToken。
-        console.warn('目前是舊版 host=1 主揪網址，建議重新建立團訂取得新版主揪連結');
+      // 2. 主揪從 LINE 官方帳號重新進來，網址沒有 groupId
+      //    這時候用 localStorage 恢復上一次的主揪團訂
+      if (!groupId) {
+        const activeHostGroup = getActiveHostGroup();
+    
+        if (activeHostGroup && activeHostGroup.groupId && activeHostGroup.hostToken) {
+          groupId = activeHostGroup.groupId;
+          urlHostToken = activeHostGroup.hostToken;
+    
+          // 補存一次，避免某些瀏覽器 localStorage 有局部遺失
+          saveHostToken(groupId, urlHostToken);
+        }
       }
     
-      if (groupId) {
-        document.getElementById('pageSubtitle').textContent = isHostMode
-          ? '團訂主揪管理模式'
-          : '團訂點餐模式';
+      // 3. 判斷是否主揪
+      isHostMode = !!groupId && (
+        hasHostPermission(groupId, urlHostToken) ||
+        oldHostFlag ||
+        roleHostFlag
+      );
     
-        document.getElementById('cartTitle').textContent = isHostMode
-          ? '主揪購物車'
-          : '我的團訂餐點';
+      if (!groupId) {
+        document.getElementById('pageSubtitle').textContent = '我們是 crewcrew 集團';
+        document.getElementById('cartTitle').textContent = '購物車';
+        document.getElementById('checkoutBtn').textContent = '前往結帳';
     
-        document.getElementById('checkoutBtn').textContent = isHostMode
-          ? '加入我的餐點'
-          : '加入團訂';
-    
-        document.getElementById('groupModeBanner').classList.add('show');
-        document.getElementById('groupInfoCard').classList.remove('hidden');
+        document.getElementById('groupModeBanner').classList.remove('show');
+        document.getElementById('groupInfoCard').classList.add('hidden');
     
         const sideSubmitBtn = document.getElementById('hostSubmitGroupBtn');
-        if (sideSubmitBtn) {
-          sideSubmitBtn.style.display = isHostMode ? 'block' : 'none';
-        }
+        if (sideSubmitBtn) sideSubmitBtn.style.display = 'none';
     
         const cartSubmitBtn = document.getElementById('hostSubmitGroupCartBtn');
-        if (cartSubmitBtn) {
-          cartSubmitBtn.style.display = isHostMode ? 'block' : 'none';
-        }
+        if (cartSubmitBtn) cartSubmitBtn.style.display = 'none';
     
-        loadGroupOrder();
+        return;
+      }
     
-        if (isHostMode) {
-          startGroupAutoRefresh();
-        }
+      document.getElementById('pageSubtitle').textContent = isHostMode
+        ? '團訂主揪管理模式'
+        : '團訂點餐模式';
+    
+      document.getElementById('cartTitle').textContent = isHostMode
+        ? '主揪購物車'
+        : '我的團訂餐點';
+    
+      document.getElementById('checkoutBtn').textContent = isHostMode
+        ? '加入我的餐點'
+        : '加入團訂';
+    
+      document.getElementById('groupModeBanner').classList.add('show');
+      document.getElementById('groupInfoCard').classList.remove('hidden');
+    
+      const sideSubmitBtn = document.getElementById('hostSubmitGroupBtn');
+      if (sideSubmitBtn) {
+        sideSubmitBtn.style.display = isHostMode ? 'block' : 'none';
+      }
+    
+      const cartSubmitBtn = document.getElementById('hostSubmitGroupCartBtn');
+      if (cartSubmitBtn) {
+        cartSubmitBtn.style.display = isHostMode ? 'block' : 'none';
+      }
+    
+      loadGroupOrder();
+    
+      if (isHostMode) {
+        startGroupAutoRefresh();
       }
     }
 
@@ -1640,15 +1703,12 @@
         note,
         source: 'GROUP_WEB',
       
-        // 主揪權限 Token，後端必須收到
         hostToken,
       
-        // 主揪 LINE 資料
         hostLineUserId: lineProfile.lineUserId || '',
         hostLineDisplayName: lineProfile.lineDisplayName || '',
         hostLinePictureUrl: lineProfile.linePictureUrl || '',
       
-        // 保險：後端也可以吃這組欄位
         lineUserId: lineProfile.lineUserId || '',
         lineDisplayName: lineProfile.lineDisplayName || '',
         linePictureUrl: lineProfile.linePictureUrl || ''
@@ -1662,7 +1722,7 @@
 
           // 存主揪身份
           saveHostToken(newGroupId, hostToken);
-          
+          saveActiveHostGroup(newGroupId, hostToken, hostName, hostPhone);          
           // 主揪自己也算這團的一個成員，之後修改餐點會用到
           try {
             localStorage.setItem('group_member_' + newGroupId, JSON.stringify({
@@ -1940,7 +2000,7 @@
       });
       const payload = {
         groupId,
-        hostToken,
+        hostToken: getCurrentHostToken(),
       
         paymentMethod: paymentMethod,
         paymentMethodText: paymentMethod,
@@ -2016,6 +2076,8 @@
       }
     }
     function leaveGroupMode() {
+      clearActiveHostGroup();
+
       groupId = '';
       isHostMode = false;
       currentGroup = null;
